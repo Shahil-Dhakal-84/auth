@@ -5,6 +5,12 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import session from 'express-session';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const master_user = process.env.MASTER_USERNAME;
+const master_password = process.env.MASTER_HASHED_PASSWORD;
 
 const app = new express();
 const PORT = 3000;
@@ -33,6 +39,27 @@ db.serialize(() => {
     })
 });
 
+app.post('/logIn',async(req,res) => {
+    const { email, password } = req.body;
+
+    console.log("Master User: ", master_user);
+    console.log("Master Hashed Password: ", master_password);
+    console.log(email)
+    console.log(password)
+
+
+    if(email === master_user) {
+        const match = await bcrypt.compare(password, master_password);
+        console.log(match);
+
+        if(match) {
+            // req.session.isAuth = true;
+            return res.status(200).send('Logged in Successfull!!');
+        }
+    }
+
+    return res.status(401).send('Invalid Username or password.')
+});
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
